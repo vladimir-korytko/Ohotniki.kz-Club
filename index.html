@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#087B55">
+  <title>Ohotniki.kz Club · Личный просмотр</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#f5f5ef;color:#20342b;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.card{width:min(100%,440px);padding:32px;border:1px solid #e2e7de;border-radius:26px;background:#fff;box-shadow:0 14px 50px #123d3008}.mark{display:grid;place-items:center;width:58px;height:58px;border-radius:20px;background:#087b55;color:#fff;font-size:30px}.brand{margin:22px 0 5px;font-size:24px;line-height:1.2;letter-spacing:-.6px}h2{margin:12px 0;font-size:17px}.copy{color:#728076;font-size:14px}#private-status{padding:15px;margin:22px 0;border-radius:14px;background:#eaf1e6;font-size:14px}#private-status[data-state=error]{background:#f8e9e2;color:#89452b}label{display:block;font-size:13px;margin-bottom:8px;font-weight:600}input,button{width:100%;font:inherit;border-radius:13px;padding:13px 15px}input{border:1px solid #dbe3d7;background:#fafbf7;color:#20342b}input:focus{outline:2px solid #087b55;outline-offset:2px}button{margin-top:12px;border:0;background:#087b55;color:white;font-weight:650;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.foot{margin:22px 0 0;font-size:11px;color:#728076}.languages{display:flex;justify-content:flex-end;gap:12px}.languages button{width:auto;padding:4px;margin:0;background:transparent;color:#728076;font-size:12px}.languages button[aria-pressed=true]{color:#087b55;font-weight:800}[hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="languages" aria-label="Language">
+      <button id="ru" type="button" aria-pressed="true">RU</button>
+      <button id="kk" type="button" aria-pressed="false">KZ</button>
+    </div>
+    <div class="mark" aria-hidden="true">♧</div>
+    <h1 class="brand">Ohotniki.kz Club</h1>
+    <h2 data-text="title">Личный просмотр</h2>
+    <p class="copy" data-text="intro">Демонстрационная версия приложения для знакомства с клубом.</p>
+    <p id="private-status" data-testid="private-status" data-state="locked" role="status" aria-live="polite">Откройте персональную ссылку из чата.</p>
+    <form id="access-form" autocomplete="off">
+      <label for="private-link" data-text="label">Персональная ссылка</label>
+      <input id="private-link" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Вставьте ссылку из чата">
+      <button id="open" type="submit" data-text="open">Открыть приложение</button>
+    </form>
+    <p class="foot" data-text="privacy">Не пересылайте персональную ссылку: она даёт доступ к просмотру. Все данные приложения демонстрационные.</p>
+    <noscript>Для просмотра включите JavaScript в браузере. / Көру үшін браузерде JavaScript қосыңыз.</noscript>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const strings = {
+        title: ['Личный просмотр', 'Жеке көру'],
+        intro: ['Демонстрационная версия приложения для знакомства с клубом.', 'Клубпен танысуға арналған қолданбаның демонстрациялық нұсқасы.'],
+        label: ['Персональная ссылка', 'Жеке сілтеме'],
+        placeholder: ['Вставьте ссылку из чата', 'Чаттағы сілтемені енгізіңіз'],
+        open: ['Открыть приложение', 'Қолданбаны ашу'],
+        privacy: ['Не пересылайте персональную ссылку: она даёт доступ к просмотру. Все данные приложения демонстрационные.', 'Жеке сілтемені басқаға жібермеңіз: ол көруге рұқсат береді. Қолданбаның барлық деректері демонстрациялық.'],
+        locked: ['Откройте персональную ссылку из чата.', 'Чаттағы жеке сілтемені ашыңыз.'],
+        unlocking: ['Открываем приложение. Первая загрузка может занять немного времени…', 'Қолданба ашылуда. Алғашқы жүктеуге біраз уақыт қажет болуы мүмкін…'],
+        ready: ['Готово. Открываем клуб…', 'Дайын. Клуб ашылуда…'],
+        invalidKey: ['Эта ссылка не подходит. Скопируйте персональную ссылку из чата полностью.', 'Бұл сілтеме жарамсыз. Чаттағы жеке сілтемені толық көшіріңіз.'],
+        network: ['Не удалось загрузить приложение. Проверьте интернет и попробуйте ещё раз.', 'Қолданбаны жүктеу мүмкін болмады. Интернетті тексеріп, қайта көріңіз.'],
+        integrity: ['Версия приложения обновляется. Попробуйте открыть ссылку немного позже.', 'Қолданба нұсқасы жаңартылуда. Сілтемені сәл кейінірек ашып көріңіз.'],
+        unsupported: ['Откройте ссылку в Safari или Chrome. Встроенный браузер мессенджера может не поддерживать просмотр.', 'Сілтемені Safari немесе Chrome арқылы ашыңыз. Мессенджердің кіріктірілген браузері көруді қолдамауы мүмкін.'],
+        storage: ['Разрешите этому сайту сохранять данные браузера и откройте ссылку снова.', 'Осы сайтқа браузер деректерін сақтауға рұқсат беріп, сілтемені қайта ашыңыз.'],
+      };
+      let language = navigator.language.toLowerCase().startsWith('kk') ? 1 : 0;
+      let statusKey = 'locked';
+      let statusState = 'locked';
+      let busy = false;
+      let registrationPromise;
+      const status = document.getElementById('private-status');
+      const input = document.getElementById('private-link');
+      const button = document.getElementById('open');
+      const personalKey = new URLSearchParams(location.hash.slice(1)).get('k');
+      // Keep the access key out of browser navigation history and referrers.
+      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+
+      function render() {
+        document.documentElement.lang = language ? 'kk' : 'ru';
+        for (const element of document.querySelectorAll('[data-text]')) element.textContent = strings[element.dataset.text][language];
+        input.placeholder = strings.placeholder[language];
+        status.textContent = strings[statusKey][language];
+        status.dataset.state = statusState;
+        document.getElementById('ru').setAttribute('aria-pressed', String(!language));
+        document.getElementById('kk').setAttribute('aria-pressed', String(Boolean(language)));
+        button.disabled = busy;
+      }
+      function setStatus(state, key) { statusState = state; statusKey = key; render(); }
+      for (const [id, value] of [['ru', 0], ['kk', 1]]) document.getElementById(id).addEventListener('click', () => { language = value; render(); });
+
+      function worker() {
+        if (!registrationPromise) registrationPromise = (async () => {
+          if (!isSecureContext || !('serviceWorker' in navigator) || !crypto.subtle || !('DecompressionStream' in window)) throw { errorCode: 'unsupported' };
+          const registration = await navigator.serviceWorker.register('./private-sw.js', { scope: './', updateViaCache: 'none' });
+          const candidate = registration.installing || registration.waiting || registration.active;
+          if (!candidate) throw { errorCode: 'unsupported' };
+          if (candidate.state !== 'activated') await new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject({ errorCode: 'unsupported' }), 30000);
+            const changed = () => {
+              if (candidate.state === 'activated') { clearTimeout(timer); candidate.removeEventListener('statechange', changed); resolve(); }
+              if (candidate.state === 'redundant') { clearTimeout(timer); reject({ errorCode: 'unsupported' }); }
+            };
+            candidate.addEventListener('statechange', changed);
+            changed();
+          });
+          return candidate;
+        })();
+        return registrationPromise;
+      }
+      async function request(message) {
+        const active = await worker();
+        return new Promise((resolve, reject) => {
+          const channel = new MessageChannel();
+          const timer = setTimeout(() => { channel.port1.close(); reject({ errorCode: 'network' }); }, 120000);
+          channel.port1.onmessage = (event) => { clearTimeout(timer); channel.port1.close(); resolve(event.data); };
+          active.postMessage(message, [channel.port2]);
+        });
+      }
+      function extractKey(value) {
+        const text = value.trim();
+        if (/^[A-Za-z0-9_-]{43}$/.test(text)) return text;
+        try { return new URLSearchParams(new URL(text).hash.slice(1)).get('k') || ''; } catch { return ''; }
+      }
+      async function unlock(value) {
+        if (busy) return;
+        const key = extractKey(value);
+        if (!/^[A-Za-z0-9_-]{43}$/.test(key)) { setStatus('error', 'invalidKey'); return; }
+        busy = true;
+        input.value = '';
+        setStatus('unlocking', 'unlocking');
+        try {
+          const result = await request({ type: 'unlock', key });
+          if (!result.ok) throw result;
+          setStatus('ready', 'ready');
+          location.replace(new URL('./app/', location.href));
+        } catch (error) {
+          busy = false;
+          const code = error && strings[error.errorCode] ? error.errorCode : 'network';
+          setStatus('error', code);
+        }
+      }
+      document.getElementById('access-form').addEventListener('submit', (event) => { event.preventDefault(); unlock(input.value); });
+      render();
+      if (personalKey) unlock(personalKey);
+      else (async () => {
+        try {
+          const result = await request({ type: 'status' });
+          if (result.unlocked) { setStatus('ready', 'ready'); location.replace(new URL('./app/', location.href)); }
+        } catch (error) { setStatus('error', error && strings[error.errorCode] ? error.errorCode : 'unsupported'); }
+      })();
+    })();
+  </script>
+</body>
+</html>
