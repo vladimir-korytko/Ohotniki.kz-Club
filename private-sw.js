@@ -5,6 +5,7 @@ const PAYLOAD_SHA256 = '39f7f21e2ca8a55dc851a65aa9e22f3c0a96ec9ec320754f7668bd91
 const SCOPE = new URL(self.registration.scope);
 const PRIVATE_PREFIX = new URL('app/', SCOPE).pathname;
 const PAYLOAD_URL = new URL('payload.bin', SCOPE);
+PAYLOAD_URL.searchParams.set('v', PAYLOAD_SHA256);
 const CACHE_NAME = 'ohotniki-private-cipher-v1';
 const CACHE_KEY = new URL(`payload.bin?sha=${PAYLOAD_SHA256}`, SCOPE);
 const AAD = new TextEncoder().encode('Ohotniki.kz Club private preview v1');

@@ -33,6 +33,7 @@
   <script>
     (() => {
       'use strict';
+      const PREVIEW_VERSION = '2acd1c338fdff547';
       const strings = {
         title: ['Личный просмотр', 'Жеке көру'],
         intro: ['Демонстрационная версия приложения для знакомства с клубом.', 'Клубпен танысуға арналған қолданбаның демонстрациялық нұсқасы.'],
@@ -77,19 +78,33 @@
       function worker() {
         if (!registrationPromise) registrationPromise = (async () => {
           if (!isSecureContext || !('serviceWorker' in navigator) || !crypto.subtle || !('DecompressionStream' in window)) throw { errorCode: 'unsupported' };
-          const registration = await navigator.serviceWorker.register('./private-sw.js', { scope: './', updateViaCache: 'none' });
-          const candidate = registration.installing || registration.waiting || registration.active;
-          if (!candidate) throw { errorCode: 'unsupported' };
-          if (candidate.state !== 'activated') await new Promise((resolve, reject) => {
-            const timer = setTimeout(() => reject({ errorCode: 'unsupported' }), 30000);
-            const changed = () => {
-              if (candidate.state === 'activated') { clearTimeout(timer); candidate.removeEventListener('statechange', changed); resolve(); }
-              if (candidate.state === 'redundant') { clearTimeout(timer); reject({ errorCode: 'unsupported' }); }
+          const script = new URL('./private-sw.js', location.href);
+          script.searchParams.set('v', PREVIEW_VERSION);
+          const registration = await navigator.serviceWorker.register(script.href, { scope: './', updateViaCache: 'none' });
+          return new Promise((resolve, reject) => {
+            const watched = new Set();
+            const cleanup = () => {
+              clearTimeout(timer);
+              registration.removeEventListener('updatefound', changed);
+              navigator.serviceWorker.removeEventListener('controllerchange', changed);
+              for (const candidate of watched) candidate.removeEventListener('statechange', changed);
             };
-            candidate.addEventListener('statechange', changed);
+            const changed = () => {
+              const candidate = [registration.installing, registration.waiting, registration.active]
+                .find((value) => value && value.scriptURL === script.href);
+              if (!candidate) return;
+              if (!watched.has(candidate)) { watched.add(candidate); candidate.addEventListener('statechange', changed); }
+              if (candidate.state === 'activated' && navigator.serviceWorker.controller?.scriptURL === script.href) {
+                cleanup(); resolve(candidate);
+              } else if (candidate.state === 'redundant') {
+                cleanup(); reject({ errorCode: 'network' });
+              }
+            };
+            const timer = setTimeout(() => { cleanup(); reject({ errorCode: 'network' }); }, 30000);
+            registration.addEventListener('updatefound', changed);
+            navigator.serviceWorker.addEventListener('controllerchange', changed);
             changed();
           });
-          return candidate;
         })();
         return registrationPromise;
       }
@@ -118,7 +133,7 @@
           const result = await request({ type: 'unlock', key });
           if (!result.ok) throw result;
           setStatus('ready', 'ready');
-          location.replace(new URL('./app/', location.href));
+          location.replace(new URL(`./app/?v=${PREVIEW_VERSION}`, location.href));
         } catch (error) {
           busy = false;
           const code = error && strings[error.errorCode] ? error.errorCode : 'network';
@@ -131,7 +146,7 @@
       else (async () => {
         try {
           const result = await request({ type: 'status' });
-          if (result.unlocked) { setStatus('ready', 'ready'); location.replace(new URL('./app/', location.href)); }
+          if (result.unlocked) { setStatus('ready', 'ready'); location.replace(new URL(`./app/?v=${PREVIEW_VERSION}`, location.href)); }
         } catch (error) { setStatus('error', error && strings[error.errorCode] ? error.errorCode : 'unsupported'); }
       })();
     })();
