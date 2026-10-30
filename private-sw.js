@@ -1,7 +1,7 @@
 'use strict';
 
 // Only the encrypted package is public. The access key is never embedded here.
-const PAYLOAD_SHA256 = '81a83bd55d270da7c54683f1174a773b21607d09dbe0ff3ba68d7352756291f5';
+const PAYLOAD_SHA256 = '1ff1bbcf2170ad0aa46226c395ef0add23a10ea4a0b8f12c2f2b78c514f0bf4a';
 const SCOPE = new URL(self.registration.scope);
 const PRIVATE_PREFIX = new URL('app/', SCOPE).pathname;
 const PAYLOAD_URL = new URL('payload.bin', SCOPE);
