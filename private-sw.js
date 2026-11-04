@@ -1,13 +1,17 @@
 'use strict';
 
 // Only the encrypted package is public. The access key is never embedded here.
-const PAYLOAD_SHA256 = '65627c92f6adaabc9555246489438aa1ce9e7fee7bc5eb20e14efa8dcb0ded0c';
+const PAYLOAD_SHA256 = '5ca0356d372aa87994268be4cc298eca740f7fe73cdc9766b0eff446f6bb14bf';
 const SCOPE = new URL(self.registration.scope);
 const PRIVATE_PREFIX = new URL('app/', SCOPE).pathname;
 const PAYLOAD_URL = new URL('payload.bin', SCOPE);
 PAYLOAD_URL.searchParams.set('v', PAYLOAD_SHA256);
 const CACHE_NAME = 'ohotniki-private-cipher-v1';
 const CACHE_KEY = new URL(`payload.bin?sha=${PAYLOAD_SHA256}`, SCOPE);
+const SHELL_KEY = new URL(`preview-shell.html?sha=${PAYLOAD_SHA256}`, SCOPE);
+const SHELL_URL = new URL(SCOPE);
+const SHELL_VERSION = new URL(self.location.href).searchParams.get('v');
+if (SHELL_VERSION) SHELL_URL.searchParams.set('v', SHELL_VERSION);
 const AAD = new TextEncoder().encode('Ohotniki.kz Club private preview v1');
 const DATABASE = 'ohotniki-private-preview';
 let unlockedFiles = null;
@@ -17,8 +21,35 @@ class PreviewError extends Error {
   constructor(code) { super(code); this.errorCode = code; }
 }
 
-self.addEventListener('install', (event) => event.waitUntil(self.skipWaiting()));
+self.addEventListener('install', (event) => event.waitUntil(Promise.all([
+  self.skipWaiting(),
+  // Only this public access page is cached in plaintext. Application files
+  // remain inside the authenticated encrypted payload.
+  rememberShell().catch(() => {}),
+])));
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
+async function rememberShell(response) {
+  response ||= await fetch(SHELL_URL, { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' });
+  if (!response.ok || !/text\/html/i.test(response.headers.get('Content-Type') || '')) return;
+  const html = await response.clone().text();
+  if (!SHELL_VERSION || !html.includes(`const PREVIEW_VERSION = '${SHELL_VERSION}'`)) return;
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(SHELL_KEY, response.clone());
+}
+
+async function publicShell(request) {
+  try {
+    const response = await fetch(request);
+    await rememberShell(response).catch(() => {});
+    return response;
+  } catch (error) {
+    const cache = await caches.open(CACHE_NAME);
+    const saved = await cache.match(SHELL_KEY);
+    if (saved) return saved;
+    throw error;
+  }
+}
 
 function database() {
   return new Promise((resolve, reject) => {
@@ -148,6 +179,11 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+  if (url.origin === SCOPE.origin && event.request.mode === 'navigate' &&
+      [SCOPE.pathname, new URL('index.html', SCOPE).pathname].includes(url.pathname)) {
+    event.respondWith(publicShell(event.request));
+    return;
+  }
   if (url.origin !== SCOPE.origin || !url.pathname.startsWith(PRIVATE_PREFIX)) return;
   event.respondWith((async () => {
     if (!['GET', 'HEAD'].includes(event.request.method)) return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
