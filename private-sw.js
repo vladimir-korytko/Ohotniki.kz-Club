@@ -1,7 +1,7 @@
 'use strict';
 
 // Only the encrypted package is public. The access key is never embedded here.
-const PAYLOAD_SHA256 = '5ca0356d372aa87994268be4cc298eca740f7fe73cdc9766b0eff446f6bb14bf';
+const PAYLOAD_SHA256 = '1ad9178273784d63bc086019a65dad4006de112bb7e0a704b7ae5d1ca04f3abf';
 const SCOPE = new URL(self.registration.scope);
 const PRIVATE_PREFIX = new URL('app/', SCOPE).pathname;
 const PAYLOAD_URL = new URL('payload.bin', SCOPE);
@@ -205,7 +205,7 @@ self.addEventListener('fetch', (event) => {
         'Cache-Control': 'private, no-store',
         'X-Content-Type-Options': 'nosniff',
         'X-Robots-Tag': 'noindex, nofollow, noarchive',
-        'Referrer-Policy': 'no-referrer',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
       },
     });
   })().catch(() => event.request.mode === 'navigate'
